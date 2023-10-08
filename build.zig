@@ -11,6 +11,14 @@ pub fn build(b: *Build) void {
         .target = target,
         .optimize = optimize,
     });
+    exe.addIncludePath(.{ .path = "dependencies/include/" });
+    exe.addCSourceFile(.{
+        .file = .{
+            .path = "dependencies/src/glad/glad.c",
+        },
+        .flags = &[_][]u8{},
+    });
+    exe.linkLibC();
 
     b.installArtifact(exe);
 
