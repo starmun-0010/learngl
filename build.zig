@@ -19,6 +19,10 @@ pub fn build(b: *Build) void {
         .flags = &[_][]u8{},
     });
     exe.linkLibC();
+    exe.addLibraryPath(.{ .path = "dependencies/lib" });
+
+    exe.linkSystemLibrary("glfw3");
+    exe.linkSystemLibrary("X11");
 
     b.installArtifact(exe);
 
