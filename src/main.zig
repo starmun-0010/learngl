@@ -43,8 +43,19 @@ pub fn main() void {
     }
     _ = c.glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
     while (c.glfwWindowShouldClose(window) == 0) {
+        processInput(window);
+
+        c.glClearColor(0.2, 0.3, 0.3, 1.0);
+        c.glClear(c.GL_COLOR_BUFFER_BIT);
+
         c.glfwPollEvents();
         c.glfwSwapBuffers(window);
+    }
+}
+
+fn processInput(window: ?*c.GLFWwindow) void {
+    if (c.glfwGetKey(window, c.GLFW_KEY_ESCAPE) == c.GLFW_PRESS) {
+        c.glfwSetWindowShouldClose(window, 1);
     }
 }
 
