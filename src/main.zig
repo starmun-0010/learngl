@@ -117,11 +117,16 @@ pub fn main() void {
     const vertices = [_]f32{
         -0.5, -0.5, 0.0, //Left
         0.5, -0.5, 0.0, //Right
-        0.0, 0.5, 0.0, //Top
+        0.5, 0.5, 0.0, //Top Right
+        -0.5, 0.5, 0.0, //Top Left
+    };
+    const indices = [_]u32{
+        0, 1, 2, //first,
+        0, 3, 2, //2nd
     };
     var VAO: c_uint = undefined;
     var VBO: c_uint = undefined;
-
+    var EBO: c_uint = undefined;
     c.glGenVertexArrays(1, &VAO);
     c.glBindVertexArray(VAO);
 
@@ -131,6 +136,14 @@ pub fn main() void {
         c.GL_ARRAY_BUFFER,
         vertices.len * @sizeOf(f32),
         &vertices,
+        c.GL_STATIC_DRAW,
+    );
+    c.glGenBuffers(1, &EBO);
+    c.glBindBuffer(c.GL_ELEMENT_ARRAY_BUFFER, EBO);
+    c.glBufferData(
+        c.GL_ELEMENT_ARRAY_BUFFER,
+        indices.len * @sizeOf(u32),
+        &indices,
         c.GL_STATIC_DRAW,
     );
 
@@ -145,14 +158,15 @@ pub fn main() void {
 
     c.glEnableVertexAttribArray(0);
 
-    c.glDrawArrays(c.GL_TRIANGLES, 0, 3);
-
-    c.glfwSwapBuffers(window);
+    //c.glDrawArrays(c.GL_TRIANGLES, 0, 3);
     while (c.glfwWindowShouldClose(window) == 0) {
         processInput(window);
 
-        //c.glClearColor(0.2, 0.3, 0.3, 1.0);
-        //c.glClear(c.GL_COLOR_BUFFER_BIT);
+        c.glClearColor(0.2, 0.3, 0.3, 1.0);
+        c.glClear(c.GL_COLOR_BUFFER_BIT);
+
+        c.glDrawElements(c.GL_TRIANGLES, 6, c.GL_UNSIGNED_INT, null);
+        c.glfwSwapBuffers(window);
         c.glfwPollEvents();
     }
 }
