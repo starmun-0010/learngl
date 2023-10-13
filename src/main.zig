@@ -4,9 +4,27 @@ const c = @cImport({
     @cInclude("GLFW/glfw3.h");
 });
 
+const SCR_WIDTH: u32 = 1920;
+const SCR_HEIGHT: u32 = 1080;
+const vertex_shader_source: [:0]const u8 =
+    \\#version 330 core
+    \\layout (location = 0) in vec3 aPos;
+    \\void main()
+    \\{
+    \\  gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+    \\};
+;
+const fragment_shader_source: [:0]const u8 =
+    \\#version 330 core
+    \\out vec4 FragColor;
+    \\void main()
+    \\{
+    \\  FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+    \\}
+;
 pub fn main() void {
-    const SCR_WIDTH: u32 = 1920;
-    const SCR_HEIGHT: u32 = 1080;
+
+    //GLFW Setup
 
     const glfw_init_result = c.glfwInit();
     if (glfw_init_result == 0) {
@@ -43,12 +61,69 @@ pub fn main() void {
     }
     _ = c.glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 
+    //Rendering Setup
+    const vertex_shader = c.glCreateShader(c.GL_VERTEX_SHADER);
+    c.glShaderSource(
+        vertex_shader,
+        1,
+        &vertex_shader_source.ptr,
+        null,
+    );
+    c.glCompileShader(vertex_shader);
+
+    var success: c_int = undefined;
+    var infoLog: [512]u8 = undefined;
+    c.glGetShaderiv(vertex_shader, c.GL_COMPILE_STATUS, &success);
+
+    if (success == 0) {
+        c.glGetShaderInfoLog(vertex_shader, infoLog.len, null, &infoLog);
+        std.debug.panic("ERROR::VERTEX::SHADER::COMPILATION_FAILED\n{s}\n", .{infoLog});
+    }
+
+    const fragment_shader = c.glCreateShader(c.GL_FRAGMENT_SHADER);
+    c.glShaderSource(
+        fragment_shader,
+        1,
+        &fragment_shader_source.ptr,
+        null,
+    );
+    c.glCompileShader(fragment_shader);
+
+    c.glGetShaderiv(fragment_shader, c.GL_COMPILE_STATUS, &success);
+    if (success == 0) {
+        c.glGetShaderInfoLog(
+            fragment_shader,
+            infoLog.len,
+            null,
+            &infoLog,
+        );
+        std.debug.panic("ERROR::VERTEX::FRAGMENT::COMPILATION_FAILED\n{s}\n", .{infoLog});
+    }
+    const shaderProgram = c.glCreateProgram();
+    c.glAttachShader(shaderProgram, vertex_shader);
+    c.glAttachShader(shaderProgram, fragment_shader);
+    c.glLinkProgram(shaderProgram);
+
+    c.glGetProgramiv(shaderProgram, c.GL_LINK_STATUS, &success);
+    if (success == 0) {
+        c.glGetProgramInfoLog(shaderProgram, infoLog.len, null, &infoLog);
+        std.debug.panic("ERROR::SHADER::PROGRAM::LINKING_FAILED\n{s}\n", .{infoLog});
+    }
+    c.glUseProgram(shaderProgram);
+
+    c.glDeleteShader(vertex_shader);
+    c.glDeleteShader(fragment_shader);
+
     const vertices = [_]f32{
         -0.5, -0.5, 0.0, //Left
         0.5, -0.5, 0.0, //Right
         0.0, 0.5, 0.0, //Top
     };
+    var VAO: c_uint = undefined;
     var VBO: c_uint = undefined;
+
+    c.glGenVertexArrays(1, &VAO);
+    c.glBindVertexArray(VAO);
 
     c.glGenBuffers(1, &VBO);
     c.glBindBuffer(c.GL_ARRAY_BUFFER, VBO);
@@ -59,14 +134,26 @@ pub fn main() void {
         c.GL_STATIC_DRAW,
     );
 
+    c.glVertexAttribPointer(
+        0,
+        3,
+        c.GL_FLOAT,
+        c.GL_FALSE,
+        3 * @sizeOf(f32),
+        null,
+    );
+
+    c.glEnableVertexAttribArray(0);
+
+    c.glDrawArrays(c.GL_TRIANGLES, 0, 3);
+
+    c.glfwSwapBuffers(window);
     while (c.glfwWindowShouldClose(window) == 0) {
         processInput(window);
 
-        c.glClearColor(0.2, 0.3, 0.3, 1.0);
-        c.glClear(c.GL_COLOR_BUFFER_BIT);
-
+        //c.glClearColor(0.2, 0.3, 0.3, 1.0);
+        //c.glClear(c.GL_COLOR_BUFFER_BIT);
         c.glfwPollEvents();
-        c.glfwSwapBuffers(window);
     }
 }
 
