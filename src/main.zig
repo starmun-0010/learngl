@@ -1,9 +1,6 @@
 const std = @import("std");
 const math = std.math;
-const c = @cImport({
-    @cInclude("glad/glad.h");
-    @cInclude("GLFW/glfw3.h");
-});
+const c = @import("cimports.zig").c;
 
 const SCR_WIDTH: u32 = 1920;
 const SCR_HEIGHT: u32 = 1080;
