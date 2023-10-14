@@ -10,18 +10,21 @@ const SCR_HEIGHT: u32 = 1080;
 const vertex_shader_source: [:0]const u8 =
     \\#version 330 core
     \\layout (location = 0) in vec3 aPos;
+    \\layout (location = 1) in vec3 aColor;
+    \\out vec3 inputColor;
     \\void main()
     \\{
     \\  gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+    \\  inputColor = aColor;
     \\};
 ;
 const fragment_shader_source: [:0]const u8 =
     \\#version 330 core
+    \\in vec3 inputColor;
     \\out vec4 FragColor;
-    \\uniform vec4 inputColor;
     \\void main()
     \\{
-    \\  FragColor = inputColor;
+    \\  FragColor = vec4(inputColor, 1.0);
     \\}
 ;
 pub fn main() void {
@@ -119,10 +122,10 @@ pub fn main() void {
     c.glDeleteShader(fragment_shader);
 
     const vertices = [_]f32{
-        -0.5, -0.5, 0.0, //Left
-        0.5, -0.5, 0.0, //Right
-        0.5, 0.5, 0.0, //Top Right
-        -0.5, 0.5, 0.0, //Top Left
+        -0.5, -0.5, 0.0, 1.0, 0.0, 0.0, //Left
+        0.5, -0.5, 0.0, 0.0, 1.0, 0.0, //Right
+        0.5, 0.5, 0.0, 0.0, 0.0, 1.0, //Top Right
+        -0.5, 0.5, 0.0, 1.0, 0.0, 1.0, //Top Left
     };
     const indices = [_]u32{
         0, 1, 2, //first,
@@ -157,11 +160,19 @@ pub fn main() void {
         3,
         c.GL_FLOAT,
         c.GL_FALSE,
-        3 * @sizeOf(f32),
+        6 * @sizeOf(f32),
         null,
     );
-
+    c.glVertexAttribPointer(
+        1,
+        3,
+        c.GL_FLOAT,
+        c.GL_FALSE,
+        6 * @sizeOf(f32),
+        @ptrFromInt(3 * @sizeOf(f32)),
+    );
     c.glEnableVertexAttribArray(0);
+    c.glEnableVertexAttribArray(1);
 
     //c.glDrawArrays(c.GL_TRIANGLES, 0, 3);
     while (c.glfwWindowShouldClose(window) == 0) {
