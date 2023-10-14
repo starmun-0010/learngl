@@ -1,4 +1,5 @@
 const std = @import("std");
+const math = std.math;
 const c = @cImport({
     @cInclude("glad/glad.h");
     @cInclude("GLFW/glfw3.h");
@@ -168,6 +169,11 @@ pub fn main() void {
 
         c.glClearColor(0.2, 0.3, 0.3, 1.0);
         c.glClear(c.GL_COLOR_BUFFER_BIT);
+
+        const time = c.glfwGetTime();
+        const greenValue: f32 = @floatCast(@abs(math.sin(time / 2.0)) + 0.1);
+
+        c.glUniform4f(inputVertexColorLocation, 0.0, greenValue, 0.0, 1.0);
 
         c.glDrawElements(c.GL_TRIANGLES, 6, c.GL_UNSIGNED_INT, null);
         c.glfwSwapBuffers(window);
